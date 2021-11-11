@@ -1,0 +1,15 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: DestinationRule
+metadata:
+  name: circuit-breaker-for-staff-service
+spec:
+  host: fleetman-stagg-service.default.svc.local # the name of the k8s service
+  trafficPolicy:
+    outlierDetection: # Circuit breakers have to be switched on
+      consecutive5xxErrors: 2
+      interval: 10s
+      baseEjectionTime: 30s
+      maxEjectionPercent: 10
+    connectionPool:
+      tcp:
+        maxConnections: 100

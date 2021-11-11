@@ -1,0 +1,37 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: fleetman-staff-service
+  namespace: default
+spec:
+  hosts:
+    - fleetman-staff-service.default.svc.cluster.local # Service DNS (K8S Service)
+  http:
+    - route:
+        - destination:
+            host: fleetman-staff-service.default.svc.cluster.local # Target DNS name
+            subset: safe-group
+          weight: 50
+        - destination:
+            host: fleetman-staff-service.default.svc.cluster.local # Target DNS name
+            subset: risky-group
+          weight: 50
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: DestinationRule # Defining which pods should be part of each subset
+metadata:
+  namespace: default
+  name: fleetman-staff-service
+spec:
+  host: fleetman-staff-service.default.svc.cluster.local
+  trafficPolicy:
+    loadBalancer:
+      consistentHash:
+        useSourceIp: true
+  subsets:
+    - labels: # Selector
+        version: safe # find pods with label "safe"
+      name: safe-group # create subset (group) of found pods called "safe"
+    - labels: # Selector
+        version: risky # find pods with label "risky"
+      name: risky-group # create subset (group) of found pods called "risky"
